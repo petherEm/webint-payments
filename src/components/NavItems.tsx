@@ -2,7 +2,6 @@
 
 import { NAV_ITEMS } from "@/lib/constants";
 import Link from "next/link";
-import React from "react";
 import { usePathname } from "next/navigation";
 
 const NavItems = () => {
@@ -15,13 +14,13 @@ const NavItems = () => {
   };
 
   return (
-    <ul className="flex flex-col sm:flex-row p-2 gap-3 sm:gap-10 font-medium">
+    <ul className="flex flex-col sm:flex-row p-2 gap-3 sm:gap-8 font-medium">
       {NAV_ITEMS.map(({ href, label }) => (
         <li key={href}>
           <Link
             href={href}
-            className={`hover:text-green-500 transition-colors ${
-              isActive(href) ? "text-green-500" : ""
+            className={`hover:text-primary transition-colors text-sm ${
+              isActive(href) ? "text-primary" : "text-muted-foreground"
             }`}
           >
             {label}
