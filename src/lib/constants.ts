@@ -1,5 +1,7 @@
 export const NAV_ITEMS = [
     { href: '/', label: 'Dashboard' },
+    { href: '/crypto', label: 'Crypto' },
+    { href: '/forex', label: 'Forex' },
     { href: '/search', label: 'Search' },
     // { href: '/watchlist', label: 'Watchlist' },
 ];
@@ -57,12 +59,17 @@ export const MARKET_OVERVIEW_WIDGET_CONFIG = {
         {
             title: 'Financial',
             symbols: [
+                { s: 'NYSE:WU', d: 'Western Union Co' },
+                { s: 'NASDAQ:PYPL', d: 'PayPal Holdings Inc' },
+                { s: 'NASDAQ:EEFT', d: 'Euronet Worldwide Inc' },
+                { s: 'NYSE:V', d: 'Visa Inc' },
+                { s: 'NYSE:MA', d: 'Mastercard Incorporated' },
                 { s: 'NYSE:JPM', d: 'JPMorgan Chase' },
                 { s: 'NYSE:WFC', d: 'Wells Fargo Co New' },
                 { s: 'NYSE:BAC', d: 'Bank Amer Corp' },
                 { s: 'NYSE:HSBC', d: 'Hsbc Hldgs Plc' },
                 { s: 'NYSE:C', d: 'Citigroup Inc' },
-                { s: 'NYSE:MA', d: 'Mastercard Incorporated' },
+               
             ],
         },
         {
@@ -110,6 +117,171 @@ export const HEATMAP_WIDGET_CONFIG = {
     isZoomEnabled: true,
     hasSymbolTooltip: true,
     isMonoSize: false,
+    width: '100%',
+    height: '600',
+};
+
+export const CRYPTO_HEATMAP_WIDGET_CONFIG = {
+    dataSource: 'Crypto',
+    blockSize: 'market_cap_calc',
+    blockColor: '24h_close_change|5',
+    locale: 'en',
+    symbolUrl: '',
+    colorTheme: 'dark',
+    hasTopBar: false,
+    isDataSetEnabled: false,
+    isZoomEnabled: true,
+    hasSymbolTooltip: true,
+    isMonoSize: false,
+    width: '100%',
+    height: '600',
+};
+
+export const CRYPTO_MARKET_OVERVIEW_WIDGET_CONFIG = {
+    colorTheme: 'dark',
+    dateRange: '12M',
+    locale: 'en',
+    largeChartUrl: '',
+    isTransparent: true,
+    showFloatingTooltip: true,
+    plotLineColorGrowing: '#0FEDBE',
+    plotLineColorFalling: '#0FEDBE',
+    gridLineColor: 'rgba(240, 243, 250, 0)',
+    scaleFontColor: '#DBDBDB',
+    belowLineFillColorGrowing: 'rgba(41, 98, 255, 0.12)',
+    belowLineFillColorFalling: 'rgba(41, 98, 255, 0.12)',
+    belowLineFillColorGrowingBottom: 'rgba(41, 98, 255, 0)',
+    belowLineFillColorFallingBottom: 'rgba(41, 98, 255, 0)',
+    symbolActiveColor: 'rgba(15, 237, 190, 0.05)',
+    tabs: [
+        {
+            title: 'Major Coins',
+            symbols: [
+                { s: 'BINANCE:BTCUSDT', d: 'Bitcoin' },
+                { s: 'BINANCE:ETHUSDT', d: 'Ethereum' },
+                { s: 'BINANCE:BNBUSDT', d: 'BNB' },
+                { s: 'BINANCE:XRPUSDT', d: 'Ripple' },
+                { s: 'BINANCE:SOLUSDT', d: 'Solana' },
+                { s: 'BINANCE:ADAUSDT', d: 'Cardano' },
+                { s: 'BINANCE:DOGEUSDT', d: 'Dogecoin' },
+            ],
+        },
+        {
+            title: 'DeFi',
+            symbols: [
+                { s: 'BINANCE:UNIUSDT', d: 'Uniswap' },
+                { s: 'BINANCE:AAVEUSDT', d: 'Aave' },
+                { s: 'BINANCE:LINKUSDT', d: 'Chainlink' },
+                { s: 'BINANCE:CRVUSDT', d: 'Curve DAO' },
+                { s: 'BINANCE:COMPUSDT', d: 'Compound' },
+                { s: 'BINANCE:MKRUSDT', d: 'Maker' },
+            ],
+        },
+        {
+            title: 'Layer 1s',
+            symbols: [
+                { s: 'BINANCE:SOLUSDT', d: 'Solana' },
+                { s: 'BINANCE:ADAUSDT', d: 'Cardano' },
+                { s: 'BINANCE:DOTUSDT', d: 'Polkadot' },
+                { s: 'BINANCE:AVAXUSDT', d: 'Avalanche' },
+                { s: 'BINANCE:MATICUSDT', d: 'Polygon' },
+                { s: 'BINANCE:ATOMUSDT', d: 'Cosmos' },
+            ],
+        },
+    ],
+    support_host: 'https://www.tradingview.com',
+    backgroundColor: '#141414',
+    width: '100%',
+    height: 600,
+    showSymbolLogo: true,
+    showChart: true,
+};
+
+export const CRYPTO_TOP_STORIES_WIDGET_CONFIG = {
+    displayMode: 'regular',
+    feedMode: 'market',
+    colorTheme: 'dark',
+    isTransparent: true,
+    locale: 'en',
+    market: 'crypto',
+    width: '100%',
+    height: '600',
+};
+
+export const FOREX_HEATMAP_WIDGET_CONFIG = {
+    colorTheme: 'dark',
+    isTransparent: true,
+    locale: 'en',
+    currencies: [
+        'EUR',
+        'USD',
+        'JPY',
+        'GBP',
+        'CHF',
+        'PLN',
+        'CAD',
+        'CNY',
+        'TRY',
+    ],
+    backgroundColor: '#141414',
+    width: '100%',
+    height: 600,
+};
+
+export const FOREX_TICKER_TAPE_WIDGET_CONFIG = {
+    symbols: [
+        {
+            proName: 'FX_IDC:EURUSD',
+            title: 'EUR/USD',
+        },
+        {
+            proName: 'FX_IDC:GBPUSD',
+            title: 'GBP/USD',
+        },
+        {
+            proName: 'FX_IDC:USDJPY',
+            title: 'USD/JPY',
+        },
+        {
+            proName: 'FX_IDC:USDCHF',
+            title: 'USD/CHF',
+        },
+        {
+            proName: 'FX_IDC:AUDUSD',
+            title: 'AUD/USD',
+        },
+        {
+            proName: 'FX_IDC:USDCAD',
+            title: 'USD/CAD',
+        },
+        {
+            proName: 'FX_IDC:NZDUSD',
+            title: 'NZD/USD',
+        },
+        {
+            proName: 'FX_IDC:EURGBP',
+            title: 'EUR/GBP',
+        },
+        {
+            proName: 'FX_IDC:EURJPY',
+            title: 'EUR/JPY',
+        },
+    ],
+    colorTheme: 'dark',
+    locale: 'en',
+    largeChartUrl: '',
+    isTransparent: false,
+    showSymbolLogo: true,
+    displayMode: 'adaptive',
+};
+
+export const FOREX_TOP_STORIES_WIDGET_CONFIG = {
+    displayMode: 'regular',
+    feedMode: 'market',
+    colorTheme: 'dark',
+    isTransparent: true,
+    locale: 'en',
+    market: 'forex',
     width: '100%',
     height: '600',
 };

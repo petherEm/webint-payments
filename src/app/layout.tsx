@@ -1,7 +1,11 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { SanityLive } from "@/sanity/lib/live";
+import { draftMode } from "next/headers";
 import "./globals.css";
 import { Toaster } from "sonner";
+import Footer from "@/components/Footer";
+import VisualEditing from "@/components/VisualEditing";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -19,11 +23,13 @@ export const metadata: Metadata = {
     "Stock performance of listed Payments companies, AI integrations and more. All you need to know about Payments, Remittance, FX - key metrics, trends and insights.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const isDraftMode = (await draftMode()).isEnabled;
+
   return (
     <html lang="en" className="dark">
       <body
@@ -31,7 +37,10 @@ export default function RootLayout({
       >
         {children}
 
+        <Footer />
         <Toaster />
+        <SanityLive />
+        {isDraftMode && <VisualEditing />}
       </body>
     </html>
   );
