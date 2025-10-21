@@ -20,10 +20,6 @@ export const postType = defineType({
       name: 'settings',
       title: 'Settings',
     },
-    {
-      name: 'seo',
-      title: 'SEO',
-    },
   ],
   fields: [
     defineField({
@@ -91,13 +87,6 @@ export const postType = defineType({
       name: 'body',
       type: 'blockContent',
       group: 'content',
-    }),
-    defineField({
-      name: 'seo',
-      title: 'SEO & Social Media',
-      type: 'seo',
-      description: 'Settings for search engines and social media sharing',
-      group: 'seo',
     }),
   ],
   preview: {

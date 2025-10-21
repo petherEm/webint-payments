@@ -7,6 +7,7 @@ export const getAllPosts = async () => {
       _id,
       title,
       slug,
+      "excerpt": array::join(string::split((pt::text(body)), "")[0..200], "") + "...",
       "author": author->{
         _id,
         name,
@@ -28,18 +29,7 @@ export const getAllPosts = async () => {
       publishedAt,
       isFeatured,
       readingTime,
-      body,
-      seo{
-        metaTitle,
-        metaDescription,
-        keywords,
-        openGraphImage{
-          asset,
-          alt
-        },
-        noIndex,
-        canonical
-      }
+      body
     } | order(publishedAt desc)`
   );
   

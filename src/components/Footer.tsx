@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { TrendingUp, BarChart3, LineChart, PieChart } from "lucide-react";
 
 const Footer = () => {
@@ -11,14 +12,13 @@ const Footer = () => {
           {/* Brand Section */}
           <div className="space-y-4">
             <Link href="/" className="flex items-center gap-2">
-              <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-primary to-cyan-500 flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-xl">
-                  F
-                </span>
-              </div>
-              <span className="text-xl font-bold text-foreground">
-                FinanceHub
-              </span>
+              <Image
+                src="/assets/icons/logo_dark.png"
+                alt="FinanceHub Logo"
+                width={140}
+                height={32}
+                className="h-16 w-auto"
+              />
             </Link>
             <p className="text-muted-foreground text-sm leading-relaxed">
               Modern finance and stock analytics platform with real-time market

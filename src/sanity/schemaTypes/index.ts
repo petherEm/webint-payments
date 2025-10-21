@@ -8,5 +8,10 @@ import {authorType} from './authorType'
 
 
 export const schema: { types: SchemaTypeDefinition[] } = {
-  types: [],
+  types: [
+    postType,
+    authorType,
+    categoryType,
+    blockContentType,
+  ],
 }

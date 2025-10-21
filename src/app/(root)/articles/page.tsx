@@ -1,7 +1,8 @@
-import React from "react";
+import { getAllPosts } from "@/sanity/lib/queries/getAllPosts";
+import ArticlesClient from "./ArticlesClient";
 
-const Articles = () => {
-  return <div>Articles</div>;
-};
+export default async function ArticlesPage() {
+  const posts = await getAllPosts();
 
-export default Articles;
+  return <ArticlesClient posts={posts} />;
+}

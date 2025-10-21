@@ -2,6 +2,7 @@ export const NAV_ITEMS = [
     { href: '/', label: 'Dashboard' },
     { href: '/crypto', label: 'Crypto' },
     { href: '/forex', label: 'Forex' },
+    { href: '/articles', label: 'Articles' },
     { href: '/search', label: 'Search' },
     // { href: '/watchlist', label: 'Watchlist' },
 ];

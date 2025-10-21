@@ -28,18 +28,7 @@ export const getPostBySlug = async (slug: string) => {
       publishedAt,
       isFeatured,
       readingTime,
-      body,
-      seo{
-        metaTitle,
-        metaDescription,
-        keywords,
-        openGraphImage{
-          asset,
-          alt
-        },
-        noIndex,
-        canonical
-      }
+      body
     }`
   );
   
