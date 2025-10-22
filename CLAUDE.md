@@ -279,7 +279,7 @@ The application uses `logo_dark.png` consistently across all components:
 - Alternative: `/public/assets/icons/logo_light.png` (available but not currently used)
 - Legacy: `/public/assets/icons/logo.svg` (deprecated)
 
-**Email Logo URL**: `https://ik.imagekit.io/a6fkjou7d/logo_dark.png?updatedAt=1756378431634`
+**Email Logo URL**: `https://ik.imagekit.io/tm6aahbewy/logo_dark.png?updatedAt=1761122067996`
 
 All logos use Next.js Image component for optimization with standard dimensions (width: 140px, height: 32px, class: "h-8 w-auto" or "h-16 w-auto").
 

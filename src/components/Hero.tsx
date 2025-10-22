@@ -3,7 +3,6 @@
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { TrendingUp, BarChart3, LineChart, Activity } from "lucide-react";
-import { useState, useEffect } from "react";
 
 const stats = [
   { label: "Active Traders", value: "50K+", icon: Activity },
@@ -48,30 +47,74 @@ const statVariants = {
 };
 
 const AnimatedPattern = () => {
-  // Only render random elements after hydration to avoid mismatch
-  const [isClient, setIsClient] = useState(false);
-  const [floatingDots, setFloatingDots] = useState<
-    Array<{ left: number; top: number; duration: number; delay: number }>
-  >([]);
+  const centerX = 300;
+  const centerY = 300;
+  const frontRadius = 180;
+  const backRadius = 120; // Smaller radius for background octagon
 
-  useEffect(() => {
-    setIsClient(true);
-    setFloatingDots(
-      Array.from({ length: 12 }).map(() => ({
-        left: Math.random() * 80 + 10,
-        top: Math.random() * 80 + 10,
-        duration: 3 + Math.random() * 2,
-        delay: Math.random() * 2,
-      }))
-    );
-  }, []);
+  const frontNodes = Array.from({ length: 8 }, (_, i) => {
+    const angle = (i * Math.PI * 2) / 8 - Math.PI / 2;
+    return {
+      id: i + 1,
+      x: centerX + frontRadius * Math.cos(angle),
+      y: centerY + frontRadius * Math.sin(angle),
+      layer: "front",
+    };
+  });
+
+  const backNodes = Array.from({ length: 8 }, (_, i) => {
+    const angle = (i * Math.PI * 2) / 8 - Math.PI / 2;
+    return {
+      id: i + 9,
+      x: centerX + backRadius * Math.cos(angle) - 30, // Offset left
+      y: centerY + backRadius * Math.sin(angle) - 30, // Offset up
+      layer: "back",
+    };
+  });
+
+  const frontConnections = [
+    { from: 1, to: 2 },
+    { from: 2, to: 3 },
+    { from: 3, to: 4 },
+    { from: 4, to: 5 },
+    { from: 5, to: 6 },
+    { from: 6, to: 7 },
+    { from: 7, to: 8 },
+    { from: 8, to: 1 },
+    { from: 1, to: 5 },
+    { from: 2, to: 6 },
+    { from: 3, to: 7 },
+    { from: 4, to: 8 },
+  ];
+
+  const backConnections = [
+    { from: 9, to: 10 },
+    { from: 10, to: 11 },
+    { from: 11, to: 12 },
+    { from: 12, to: 13 },
+    { from: 13, to: 14 },
+    { from: 14, to: 15 },
+    { from: 15, to: 16 },
+    { from: 16, to: 9 },
+  ];
+
+  const depthConnections = [
+    { from: 1, to: 9 },
+    { from: 2, to: 10 },
+    { from: 3, to: 11 },
+    { from: 4, to: 12 },
+    { from: 5, to: 13 },
+    { from: 6, to: 14 },
+    { from: 7, to: 15 },
+    { from: 8, to: 16 },
+  ];
+
+  const allNodes = [...backNodes, ...frontNodes]; // Back nodes first for rendering order
 
   return (
     <div className="relative w-full h-full min-h-[600px] flex items-center justify-center">
-      {/* Animated grid background */}
-      <div className="absolute inset-0 overflow-hidden">
+      <div className="absolute inset-0 overflow-hidden opacity-20">
         <svg className="w-full h-full" viewBox="0 0 600 600">
-          {/* Grid lines */}
           {Array.from({ length: 20 }).map((_, i) => (
             <motion.line
               key={`h-${i}`}
@@ -105,9 +148,8 @@ const AnimatedPattern = () => {
         </svg>
       </div>
 
-      {/* Floating orbs with glow */}
       <motion.div
-        className="absolute top-1/4 left-1/4 w-32 h-32 rounded-full bg-primary/20 blur-2xl"
+        className="absolute top-1/4 left-1/4 w-32 h-32 rounded-full bg-green-500/10 blur-2xl"
         animate={{
           x: [0, 50, 0],
           y: [0, -30, 0],
@@ -120,20 +162,7 @@ const AnimatedPattern = () => {
         }}
       />
       <motion.div
-        className="absolute top-1/2 right-1/3 w-40 h-40 rounded-full bg-chart-2/20 blur-2xl"
-        animate={{
-          x: [0, -40, 0],
-          y: [0, 40, 0],
-          scale: [1, 1.3, 1],
-        }}
-        transition={{
-          duration: 10,
-          repeat: Number.POSITIVE_INFINITY,
-          ease: "easeInOut",
-        }}
-      />
-      <motion.div
-        className="absolute bottom-1/4 right-1/4 w-36 h-36 rounded-full bg-green-500/20 blur-2xl"
+        className="absolute bottom-1/4 right-1/4 w-36 h-36 rounded-full bg-green-500/15 blur-2xl"
         animate={{
           x: [0, 30, 0],
           y: [0, -50, 0],
@@ -146,95 +175,180 @@ const AnimatedPattern = () => {
         }}
       />
 
-      {/* Animated geometric shapes */}
       <svg className="absolute inset-0 w-full h-full" viewBox="0 0 600 600">
-        {/* Hexagons */}
-        {[
-          { cx: 150, cy: 150, delay: 0 },
-          { cx: 450, cy: 200, delay: 0.3 },
-          { cx: 300, cy: 400, delay: 0.6 },
-          { cx: 500, cy: 450, delay: 0.9 },
-        ].map((hex, i) => (
-          <motion.g key={`hex-${i}`}>
-            <motion.polygon
-              points={`${hex.cx},${hex.cy - 30} ${hex.cx + 26},${hex.cy - 15} ${
-                hex.cx + 26
-              },${hex.cy + 15} ${hex.cx},${hex.cy + 30} ${hex.cx - 26},${
-                hex.cy + 15
-              } ${hex.cx - 26},${hex.cy - 15}`}
-              fill="none"
+        {backConnections.map((conn, i) => {
+          const fromNode = allNodes.find((n) => n.id === conn.from);
+          const toNode = allNodes.find((n) => n.id === conn.to);
+          if (!fromNode || !toNode) return null;
+
+          return (
+            <motion.line
+              key={`back-line-${i}`}
+              x1={fromNode.x}
+              y1={fromNode.y}
+              x2={toNode.x}
+              y2={toNode.y}
               stroke="currentColor"
-              strokeWidth="1.5"
-              className="text-primary/40"
+              strokeWidth="1"
+              className="text-green-500/15"
               initial={{ pathLength: 0, opacity: 0 }}
               animate={{ pathLength: 1, opacity: 1 }}
-              transition={{ duration: 2, delay: hex.delay }}
+              transition={{ duration: 1.5, delay: i * 0.08 }}
             />
+          );
+        })}
+
+        {depthConnections.map((conn, i) => {
+          const fromNode = allNodes.find((n) => n.id === conn.from);
+          const toNode = allNodes.find((n) => n.id === conn.to);
+          if (!fromNode || !toNode) return null;
+
+          return (
+            <motion.line
+              key={`depth-line-${i}`}
+              x1={fromNode.x}
+              y1={fromNode.y}
+              x2={toNode.x}
+              y2={toNode.y}
+              stroke="currentColor"
+              strokeWidth="1"
+              className="text-green-500/20"
+              strokeDasharray="4 4"
+              initial={{ pathLength: 0, opacity: 0 }}
+              animate={{ pathLength: 1, opacity: 1 }}
+              transition={{ duration: 1.5, delay: i * 0.1 + 0.5 }}
+            />
+          );
+        })}
+
+        {frontConnections.map((conn, i) => {
+          const fromNode = allNodes.find((n) => n.id === conn.from);
+          const toNode = allNodes.find((n) => n.id === conn.to);
+          if (!fromNode || !toNode) return null;
+
+          return (
+            <motion.line
+              key={`front-line-${i}`}
+              x1={fromNode.x}
+              y1={fromNode.y}
+              x2={toNode.x}
+              y2={toNode.y}
+              stroke="currentColor"
+              strokeWidth="1.5"
+              className="text-green-500/30"
+              initial={{ pathLength: 0, opacity: 0 }}
+              animate={{ pathLength: 1, opacity: 1 }}
+              transition={{ duration: 1.5, delay: i * 0.1 }}
+            />
+          );
+        })}
+
+        {frontConnections.map((conn, i) => {
+          const fromNode = allNodes.find((n) => n.id === conn.from);
+          const toNode = allNodes.find((n) => n.id === conn.to);
+          if (!fromNode || !toNode) return null;
+
+          return (
             <motion.circle
-              cx={hex.cx}
-              cy={hex.cy}
+              key={`front-signal-${i}`}
+              r="4"
+              fill="currentColor"
+              className="text-green-500"
+              initial={{ cx: fromNode.x, cy: fromNode.y, opacity: 0 }}
+              animate={{
+                cx: [fromNode.x, toNode.x, fromNode.x],
+                cy: [fromNode.y, toNode.y, fromNode.y],
+                opacity: [0, 1, 1, 0],
+              }}
+              transition={{
+                duration: 3,
+                delay: i * 0.3,
+                repeat: Number.POSITIVE_INFINITY,
+                ease: "linear",
+              }}
+            >
+              <animate
+                attributeName="r"
+                values="3;5;3"
+                dur="1s"
+                repeatCount="indefinite"
+              />
+            </motion.circle>
+          );
+        })}
+
+        {depthConnections.slice(0, 4).map((conn, i) => {
+          const fromNode = allNodes.find((n) => n.id === conn.from);
+          const toNode = allNodes.find((n) => n.id === conn.to);
+          if (!fromNode || !toNode) return null;
+
+          return (
+            <motion.circle
+              key={`depth-signal-${i}`}
               r="3"
               fill="currentColor"
-              className="text-primary"
-              initial={{ scale: 0 }}
-              animate={{ scale: [0, 1.5, 1] }}
-              transition={{ duration: 1, delay: hex.delay + 0.5 }}
+              className="text-green-400/70"
+              initial={{ cx: fromNode.x, cy: fromNode.y, opacity: 0 }}
+              animate={{
+                cx: [fromNode.x, toNode.x, fromNode.x],
+                cy: [fromNode.y, toNode.y, fromNode.y],
+                opacity: [0, 0.7, 0.7, 0],
+              }}
+              transition={{
+                duration: 2.5,
+                delay: i * 0.6 + 0.5,
+                repeat: Number.POSITIVE_INFINITY,
+                ease: "easeInOut",
+              }}
             />
-          </motion.g>
-        ))}
+          );
+        })}
 
-        {/* Connecting lines */}
-        <motion.path
-          d="M 150 150 L 450 200 L 300 400 L 500 450"
-          stroke="url(#gradient)"
-          strokeWidth="2"
-          fill="none"
-          initial={{ pathLength: 0, opacity: 0 }}
-          animate={{ pathLength: 1, opacity: 0.6 }}
-          transition={{ duration: 3, delay: 1 }}
-        />
-
-        {/* Gradient definition */}
-        <defs>
-          <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="rgb(6, 182, 212)" stopOpacity="0.8" />
-            <stop
-              offset="50%"
-              stopColor="rgb(34, 211, 238)"
-              stopOpacity="0.6"
-            />
-            <stop
-              offset="100%"
-              stopColor="rgb(34, 197, 94)"
-              stopOpacity="0.4"
-            />
-          </linearGradient>
-        </defs>
+        {allNodes.map((node, i) => {
+          const isBack = node.layer === "back";
+          return (
+            <motion.g key={`node-${node.id}`}>
+              <motion.circle
+                cx={node.x}
+                cy={node.y}
+                r={isBack ? 8 : 12}
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={isBack ? 1 : 1.5}
+                className={isBack ? "text-green-500/20" : "text-green-500/40"}
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{
+                  scale: [1, 1.3, 1],
+                  opacity: isBack ? [0.2, 0.4, 0.2] : [0.4, 0.8, 0.4],
+                }}
+                transition={{
+                  duration: 2,
+                  delay: i * 0.1,
+                  repeat: Number.POSITIVE_INFINITY,
+                }}
+              />
+              <motion.circle
+                cx={node.x}
+                cy={node.y}
+                r={isBack ? 4 : 6}
+                fill="currentColor"
+                className={isBack ? "text-green-500/50" : "text-green-500"}
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ duration: 0.5, delay: i * 0.08 }}
+              />
+              <circle
+                cx={node.x}
+                cy={node.y}
+                r={isBack ? 1.5 : 2}
+                fill="currentColor"
+                className="text-white"
+              />
+            </motion.g>
+          );
+        })}
       </svg>
 
-      {/* Floating data points - only render on client */}
-      {isClient &&
-        floatingDots.map((dot, i) => (
-          <motion.div
-            key={`dot-${i}`}
-            className="absolute w-2 h-2 rounded-full bg-primary"
-            style={{
-              left: `${dot.left}%`,
-              top: `${dot.top}%`,
-            }}
-            animate={{
-              y: [0, -20, 0],
-              opacity: [0.3, 1, 0.3],
-            }}
-            transition={{
-              duration: dot.duration,
-              repeat: Number.POSITIVE_INFINITY,
-              delay: dot.delay,
-            }}
-          />
-        ))}
-
-      {/* Pulsing rings */}
       {[
         { size: 200, delay: 0 },
         { size: 300, delay: 0.5 },
@@ -242,11 +356,11 @@ const AnimatedPattern = () => {
       ].map((ring, i) => (
         <motion.div
           key={`ring-${i}`}
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-primary/20"
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-green-500/10"
           style={{ width: ring.size, height: ring.size }}
           animate={{
             scale: [1, 1.2, 1],
-            opacity: [0.3, 0.6, 0.3],
+            opacity: [0.2, 0.4, 0.2],
           }}
           transition={{
             duration: 4,
@@ -262,56 +376,36 @@ const AnimatedPattern = () => {
 export default function Hero() {
   return (
     <section className="relative overflow-hidden border-b border-border">
-      {/* Background gradient effects */}
       <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-chart-2/5 pointer-events-none" />
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/10 rounded-full blur-[120px] pointer-events-none" />
       <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-chart-2/10 rounded-full blur-[100px] pointer-events-none" />
 
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-screen-2xl py-16 sm:py-20 lg:py-28 relative">
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
-          {/* Left Column - Content */}
           <motion.div
             variants={containerVariants}
             initial="hidden"
             animate="visible"
             className="space-y-8"
           >
-            {/* Badge */}
-            <motion.div
-              variants={itemVariants}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20"
-            >
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
-              </span>
-              <span className="text-sm font-medium text-primary">
-                Real-time Market Analytics
-              </span>
-            </motion.div>
-
-            {/* Main heading */}
             <motion.h1
               variants={itemVariants}
               className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold text-foreground text-balance leading-tight"
             >
-              We Are{" "}
+              Trade Smarter with{" "}
               <span className="bg-gradient-to-r from-primary via-chart-2 to-primary bg-clip-text text-transparent animate-gradient">
-                Payments
+                Advanced Analytics
               </span>
             </motion.h1>
 
-            {/* Subheading */}
             <motion.p
               variants={itemVariants}
               className="text-lg sm:text-xl text-muted-foreground text-balance leading-relaxed"
             >
-              We analyze payment trends, process volumes, and market data to
-              provide actionable insights for businesses and investors with
-              major focus on tech and innovation in the payments industry.
+              Professional-grade market insights, real-time data visualization,
+              and powerful analytics tools to elevate your trading strategy.
             </motion.p>
 
-            {/* CTA Buttons */}
             <motion.div
               variants={itemVariants}
               className="flex flex-col sm:flex-row items-start gap-4"
@@ -327,43 +421,11 @@ export default function Hero() {
                 href="#market-overview"
                 className="px-8 py-4 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold rounded-lg transition-all duration-300 border border-border hover:border-primary/50 w-full sm:w-auto"
               >
-                Explore Crypto
+                Explore Markets
               </Link>
-            </motion.div>
-
-            {/* Stats Grid */}
-            <motion.div
-              variants={containerVariants}
-              className="grid grid-cols-2 gap-4 pt-4"
-            >
-              {stats.map((stat) => {
-                const Icon = stat.icon;
-                return (
-                  <motion.div
-                    key={stat.label}
-                    variants={statVariants}
-                    className="group relative p-4 rounded-xl bg-card/50 backdrop-blur-sm border border-border hover:border-primary/50 transition-all duration-300 hover:shadow-lg hover:shadow-primary/5"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 rounded-lg bg-primary/10 text-primary group-hover:bg-primary/20 transition-colors duration-300">
-                        <Icon className="w-5 h-5" />
-                      </div>
-                      <div>
-                        <div className="text-xl sm:text-2xl font-bold text-foreground">
-                          {stat.value}
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          {stat.label}
-                        </div>
-                      </div>
-                    </div>
-                  </motion.div>
-                );
-              })}
             </motion.div>
           </motion.div>
 
-          {/* Right Column - Animated Pattern */}
           <motion.div
             initial={{ opacity: 0, x: 50 }}
             animate={{ opacity: 1, x: 0 }}
