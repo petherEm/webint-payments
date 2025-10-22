@@ -6,6 +6,34 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 PaymentCharts v2 is a financial markets tracking application built with Next.js 15, featuring real-time stock market data visualization, user authentication, AI-powered email personalization, and content management. The application integrates TradingView widgets for market data display, uses Better Auth for authentication with MongoDB as the data store, and Sanity CMS for managing blog/article content with live preview capabilities.
 
+## Recent Updates
+
+### Latest Changes (January 2025)
+- ✅ **Sanity CMS Integration Complete** - Articles page now pulls data from Sanity with server-side fetching
+  - Hybrid architecture: Server component for data fetching + Client component for interactivity
+  - Auto-generated excerpts from post body content (200 characters)
+  - Featured posts support with `isFeatured` flag
+  - Full TypeScript type safety with auto-generated types via `npm run typegen`
+- ✅ **Individual Article Pages** - Dynamic `/articles/[slug]` route fully implemented
+  - Server component for data fetching with 404 handling
+  - Client component with PortableText rendering for rich content
+  - Table of contents with active heading tracking on scroll
+  - Social sharing (Twitter, LinkedIn, Facebook, Copy link)
+  - Author bio section with profile images and social links
+  - Simple styled code blocks (no syntax highlighting library for faster builds)
+  - Black/green color scheme matching the articles list page
+- ✅ **Logo System Unified** - Replaced all placeholders with `logo_dark.png`
+  - Updated Header, Footer, Auth layout, and all email templates
+  - Consistent branding across entire application
+  - Next.js Image component optimization throughout
+- ✅ **Navigation Enhanced** - Added Articles link to main navigation
+  - New order: Dashboard → Crypto → Forex → Articles → Search
+  - Active state highlighting for articles route
+- ✅ **Schema Refinements** - Cleaned up Sanity schemas
+  - Removed SEO field (can be re-added with proper schema)
+  - Removed advanced code blocks (simplified blockContent type)
+  - Maintained author profiles with social links (LinkedIn, GitHub)
+
 ## Development Commands
 
 ### Core Commands
@@ -34,7 +62,8 @@ The project uses Next.js 15 App Router with route groups:
 - `(root)` - Main application routes (requires authentication via middleware)
   - `/` - Dashboard with market overview
   - `/search` - Stock search page
-  - `/articles` - Articles/blog page (placeholder, Sanity integration in progress)
+  - `/articles` - Articles/blog list page with Sanity CMS integration
+  - `/articles/[slug]` - Individual article detail page
   - `/crypto` - Cryptocurrency market page
   - `/forex` - Forex market page
 - `studio/[[...tool]]` - Sanity Studio CMS (mounted at `/studio`)
@@ -169,6 +198,59 @@ The articles page uses a **hybrid architecture** (Server + Client Components):
 - `ALL_POSTS_QUERYResult` type from `sanity.types.ts`
 - Type-safe queries ensure data consistency
 
+#### Individual Article Page Implementation
+The individual article page (`/articles/[slug]`) also uses a **hybrid architecture**:
+
+**Server Component** (`src/app/(root)/articles/[slug]/page.tsx`):
+- Accepts dynamic `slug` parameter from URL
+- Fetches single post using `getPostBySlug(slug)`
+- Returns 404 via `notFound()` if post doesn't exist
+- Passes post data to client component
+
+**Client Component** (`src/app/(root)/articles/[slug]/ArticleContent.tsx`):
+- Renders full article with PortableText for rich content
+- Custom PortableText components for styled rendering:
+  - Images with captions and borders
+  - Code blocks with language labels and copy buttons
+  - Custom heading styles (H2, H3, H4) with scroll anchor IDs
+  - Blockquotes with green border accent
+  - Inline code with green highlighting
+  - Links with green color
+- **Table of Contents**:
+  - Auto-generated from H2 and H3 headings in article body
+  - Sticky sidebar on desktop (hidden on mobile)
+  - Active heading tracking using scroll position
+  - Smooth scroll navigation to sections
+- **Share Functionality**:
+  - Share buttons for Twitter, LinkedIn, Facebook
+  - Copy link button with success feedback
+  - All buttons styled with hover effects matching theme
+- **Author Bio Section**:
+  - Profile image or fallback with initials
+  - Job title and bio with PortableText support
+  - Social links (LinkedIn, GitHub) with icons
+  - Styled card with black background and green accents
+- **SEO Optimization**:
+  - Structured data (JSON-LD) for search engines
+  - Featured image optimization
+  - Publication date and reading time display
+- **Code Blocks**:
+  - Simple styled pre/code blocks without syntax highlighting library
+  - Decision made to avoid heavy dependencies (react-syntax-highlighter caused refractor module errors)
+  - Clean dark styling with language label and copy button
+  - Maintains fast build times
+
+**Color Scheme**:
+- Backgrounds: `#050505`, `#0a0a0a`, `#1a1a1a`
+- Primary accent: `#0FEDBE` (green throughout)
+- Consistent with articles list page design
+
+**Data Flow**:
+1. Server component receives slug from URL params
+2. Query fetches post with full body content and author details
+3. Client component renders with interactive features
+4. Real-time updates available via Sanity Live API
+
 ## Key Patterns
 
 ### Import Aliases
@@ -183,7 +265,23 @@ import { connectToDatabase } from "@/database/mongoose";
 ### Component Organization
 - **UI components**: `src/components/ui/` - Radix UI primitives with Tailwind styling
 - **Form components**: `src/components/forms/` - Reusable form fields (InputField, SelectField, CountrySelectField)
-- **Feature components**: `src/components/` - Header, UserDropdown, TradingViewWidget, etc.
+- **Feature components**: `src/components/` - Header, UserDropdown, TradingViewWidget, Footer, etc.
+
+### Branding & Logo
+The application uses `logo_dark.png` consistently across all components:
+- **Header** (`src/components/Header.tsx`) - Logo displayed in main navigation
+- **Footer** (`src/components/Footer.tsx`) - Logo displayed in footer brand section
+- **Auth Layout** (`src/app/(auth)/layout.tsx`) - Logo displayed on sign-in/sign-up pages
+- **Email Templates** (`src/lib/nodemailer/templates.ts`) - Logo included in all transactional emails via ImageKit CDN
+
+**Logo Files**:
+- Primary: `/public/assets/icons/logo_dark.png`
+- Alternative: `/public/assets/icons/logo_light.png` (available but not currently used)
+- Legacy: `/public/assets/icons/logo.svg` (deprecated)
+
+**Email Logo URL**: `https://ik.imagekit.io/a6fkjou7d/logo_dark.png?updatedAt=1756378431634`
+
+All logos use Next.js Image component for optimization with standard dimensions (width: 140px, height: 32px, class: "h-8 w-auto" or "h-16 w-auto").
 
 ### Styling
 - **Tailwind CSS 4** with PostCSS
@@ -205,6 +303,8 @@ import { connectToDatabase } from "@/database/mongoose";
 - **Styling**: Tailwind CSS 4, Radix UI components
 - **Database**: MongoDB with Mongoose ODM
 - **CMS**: Sanity CMS 4.3.0 with live content API
+  - `@portabletext/react` for rich text rendering
+  - Type generation via `sanity typegen`
 - **Authentication**: Better Auth with MongoDB adapter
 - **Background Jobs**: Inngest with OpenAI integration
 - **Email**: Nodemailer for transactional emails
@@ -231,3 +331,35 @@ Navigation items defined in `NAV_ITEMS` constant in `src/lib/constants.ts`:
 - International Companies (BABA, NIO, XPEV, etc.)
 
 Use this for autocomplete, search suggestions, or default watchlist items.
+
+---
+
+## Implementation Status
+
+### ✅ Fully Implemented
+- **Core Pages**: Dashboard, Crypto, Forex, Search, Articles (list + detail)
+- **Authentication**: Sign-in, Sign-up with Better Auth & MongoDB
+- **Articles/Blog**: Sanity CMS integration with live preview
+  - Articles list page with search and filtering
+  - Individual article pages (`/articles/[slug]`) with table of contents
+  - Rich content rendering with PortableText
+  - Social sharing and author bio sections
+- **TradingView Integration**: Real-time market data widgets
+- **Email System**: Transactional emails with Nodemailer & OpenAI personalization
+- **Background Jobs**: Inngest for email automation
+- **Branding**: Unified logo system across all components
+- **Navigation**: Full navigation menu with active states
+
+### 🚧 Planned Features
+- **Watchlist**: User-specific stock watchlist (route commented out)
+- **SEO Fields**: Sanity SEO schema for articles (removed, can be re-added)
+- **Advanced Code Syntax Highlighting**: Could add library like `shiki` or `prism-react-renderer` for colored syntax highlighting (currently using simple styled code blocks for performance)
+- **User Profiles**: Extended user profile management
+- **Portfolio Tracking**: Real portfolio management features
+
+### 📝 Notes for Development
+- **Turbopack Build Issue**: Current known issue with Sanity in production build with Turbopack. Consider using standard Next.js build if needed.
+- **Type Generation**: Run `npm run typegen` after any Sanity schema changes
+- **Live Content**: Requires `SANITY_API_READ_TOKEN` for real-time content updates
+- **Email Templates**: Update ImageKit logo URL if changing CDN or logo files
+- **Code Blocks**: Using simple styled code blocks instead of `react-syntax-highlighter` to avoid refractor module errors and maintain fast build times. If advanced syntax highlighting is needed, consider lighter alternatives like `shiki` or `prism-react-renderer`.

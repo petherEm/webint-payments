@@ -16,7 +16,7 @@ export const sendWelcomeEmail = async ({ email, name, intro }: WelcomeEmailData)
         .replace("{{intro}}", intro);
 
    const mailOptions = {
-        from: `PaymentsCharts <${process.env.NODEMAILER_EMAIL}>`,
+        from: `WebInt Payments <${process.env.NODEMAILER_EMAIL}>`,
         to: email,
         subject: 'Welcome to PaymentsCharts! - your hottest payments stock market tracker',
         text: "Thanks for joining PaymentsCharts. You now have the tools to track markets and make smarter moves.",
@@ -41,10 +41,10 @@ export const sendNewsSummaryEmail = async (
         .replace('{{newsContent}}', newsContent);
 
     const mailOptions = {
-        from: `"Signalist News" <signalist@jsmastery.pro>`,
+        from: `WebInt Payments <${process.env.NODEMAILER_EMAIL}>`,
         to: email,
         subject: `📈 Market News Summary Today - ${date}`,
-        text: `Today's market news summary from Signalist`,
+        text: `Today's market news summary from WebInt Payments`,
         html: htmlTemplate,
     };
 

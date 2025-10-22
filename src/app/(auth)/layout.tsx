@@ -28,7 +28,7 @@ const Layout = async ({ children }: { children: React.ReactNode }) => {
       <section className="auth-right-section">
         <div className="z-10 relative lg:mt-4 lg:mb-16">
           <blockquote className="auth-blockquote">
-            Signalist turns your payment data into beautiful, informative
+            WebInt Payments turns your payment data into beautiful, informative
             charts. Understand your transactions at a glance and make smarter
             financial decisions.
           </blockquote>
