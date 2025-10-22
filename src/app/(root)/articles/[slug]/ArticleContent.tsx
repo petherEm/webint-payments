@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -15,6 +15,35 @@ import { PortableText } from "@portabletext/react";
 import type { POST_BY_SLUG_QUERYResult } from "@/sanity.types";
 import { urlFor } from "@/sanity/lib/image";
 
+// Helper function to extract text from React children
+const extractTextFromChildren = (children: any): string => {
+  if (!children) return '';
+
+  if (typeof children === 'string') return children;
+
+  if (Array.isArray(children)) {
+    return children.map(extractTextFromChildren).join('');
+  }
+
+  if (typeof children === 'object' && children.props) {
+    return extractTextFromChildren(children.props.children);
+  }
+
+  return '';
+};
+
+// Helper function to create URL-safe IDs from heading text
+const slugify = (text: string): string => {
+  if (!text || typeof text !== 'string') return '';
+
+  return text
+    .toLowerCase()
+    .replace(/[^\w\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .trim();
+};
+
 interface ArticleContentProps {
   post: NonNullable<POST_BY_SLUG_QUERYResult>;
 }
@@ -24,18 +53,25 @@ export default function ArticleContent({ post }: ArticleContentProps) {
   const [copied, setCopied] = useState<string | null>(null);
   const [linkCopied, setLinkCopied] = useState(false);
 
-  // Extract headings for table of contents
-  const headings = post.body
-    ? (post.body as any[])
-        .filter(
-          (block: any) => block.style && ["h2", "h3"].includes(block.style)
-        )
-        .map((block: any, index: number) => ({
-          id: `heading-${index}`,
-          text: block.children?.map((child: any) => child.text).join("") || "",
+  // Extract headings for table of contents with memoization
+  const headings = useMemo(() => {
+    if (!post.body) return [];
+
+    return (post.body as any[])
+      .filter((block: any) =>
+        block.style && ["h1", "h2", "h3", "h4"].includes(block.style)
+      )
+      .map((block: any) => {
+        const text = block.children?.map((child: any) => child.text || "").join("") || "";
+        const id = slugify(text);
+        return {
+          id,
+          text,
           level: block.style,
-        }))
-    : [];
+        };
+      })
+      .filter(h => h.text && h.id); // Remove empty headings or headings without valid IDs
+  }, [post.body]);
 
   // Track active heading on scroll
   useEffect(() => {
@@ -43,7 +79,7 @@ export default function ArticleContent({ post }: ArticleContentProps) {
       const headingElements = headings.map((h) =>
         document.getElementById(h.id)
       );
-      const scrollPosition = window.scrollY + 100;
+      const scrollPosition = window.scrollY + 150;
 
       for (let i = headingElements.length - 1; i >= 0; i--) {
         const element = headingElements[i];
@@ -52,8 +88,14 @@ export default function ArticleContent({ post }: ArticleContentProps) {
           return;
         }
       }
+
+      // If we're at the top, clear active heading
+      if (window.scrollY < 100) {
+        setActiveHeading("");
+      }
     };
 
+    handleScroll(); // Run on mount
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, [headings]);
@@ -100,7 +142,7 @@ export default function ArticleContent({ post }: ArticleContentProps) {
       image: ({ value }: any) => {
         if (!value?.asset) return null;
         return (
-          <div className="my-8 rounded-xl overflow-hidden border border-[#1a1a1a]">
+          <div className="my-10 rounded-xl overflow-hidden border border-[#1a1a1a] shadow-lg">
             <Image
               src={urlFor(value).url()}
               alt={value.alt || "Article image"}
@@ -109,7 +151,7 @@ export default function ArticleContent({ post }: ArticleContentProps) {
               className="w-full h-auto"
             />
             {value.alt && (
-              <p className="text-sm text-gray-400 text-center py-2 bg-[#0a0a0a]">
+              <p className="text-sm text-gray-400 text-center py-3 bg-[#0a0a0a] border-t border-[#1a1a1a]">
                 {value.alt}
               </p>
             )}
@@ -119,11 +161,11 @@ export default function ArticleContent({ post }: ArticleContentProps) {
       code: ({ value }: any) => {
         const codeId = `code-${Math.random().toString(36).substr(2, 9)}`;
         return (
-          <div className="my-6 group relative">
+          <div className="my-8 group relative">
             <div className="absolute top-3 right-3 z-10">
               <button
                 onClick={() => copyCode(value.code, codeId)}
-                className="flex items-center gap-2 px-3 py-1.5 bg-[#0a0a0a] border border-[#1a1a1a] rounded-lg text-xs text-gray-300 hover:text-[#0FEDBE] hover:border-[#0FEDBE] transition-all"
+                className="flex items-center gap-2 px-3 py-1.5 bg-[#0a0a0a] border border-[#1a1a1a] rounded-lg text-xs text-gray-300 hover:text-green-500 hover:border-green-500 transition-all"
               >
                 {copied === codeId ? (
                   <>
@@ -138,8 +180,8 @@ export default function ArticleContent({ post }: ArticleContentProps) {
                 )}
               </button>
             </div>
-            <div className="rounded-xl border border-[#1a1a1a] bg-[#0a0a0a] overflow-hidden">
-              <div className="px-4 py-2 border-b border-[#1a1a1a] text-xs text-gray-400 font-mono">
+            <div className="rounded-xl border border-[#1a1a1a] bg-[#0a0a0a] overflow-hidden shadow-lg">
+              <div className="px-4 py-2 border-b border-[#1a1a1a] text-xs text-green-500 font-mono font-semibold">
                 {value.language || "code"}
               </div>
               <pre className="p-6 overflow-x-auto text-sm leading-relaxed">
@@ -151,38 +193,61 @@ export default function ArticleContent({ post }: ArticleContentProps) {
       },
     },
     block: {
-      h2: ({ children, value }: any) => {
-        const index = headings.findIndex((h) => h.text === children?.[0]);
-        const id = index >= 0 ? headings[index].id : "";
+      h1: ({ children }: any) => {
+        const text = extractTextFromChildren(children);
+        const id = slugify(text);
+        return (
+          <h1
+            id={id}
+            className="text-4xl md:text-5xl font-bold text-white mt-16 mb-6 scroll-mt-24 border-b border-[#1a1a1a] pb-4"
+          >
+            {children}
+          </h1>
+        );
+      },
+      h2: ({ children }: any) => {
+        const text = extractTextFromChildren(children);
+        const id = slugify(text);
         return (
           <h2
             id={id}
-            className="text-3xl font-bold text-white mt-12 mb-4 scroll-mt-24"
+            className="text-3xl md:text-4xl font-bold text-white mt-14 mb-5 scroll-mt-24 border-l-4 border-green-500 pl-4"
           >
             {children}
           </h2>
         );
       },
-      h3: ({ children, value }: any) => {
-        const index = headings.findIndex((h) => h.text === children?.[0]);
-        const id = index >= 0 ? headings[index].id : "";
+      h3: ({ children }: any) => {
+        const text = extractTextFromChildren(children);
+        const id = slugify(text);
         return (
           <h3
             id={id}
-            className="text-2xl font-bold text-white mt-8 mb-3 scroll-mt-24"
+            className="text-2xl md:text-3xl font-bold text-white mt-10 mb-4 scroll-mt-24"
           >
             {children}
           </h3>
         );
       },
-      h4: ({ children }: any) => (
-        <h4 className="text-xl font-bold text-white mt-6 mb-2">{children}</h4>
-      ),
+      h4: ({ children }: any) => {
+        const text = extractTextFromChildren(children);
+        const id = slugify(text);
+        return (
+          <h4
+            id={id}
+            className="text-xl md:text-2xl font-bold text-white mt-8 mb-3 scroll-mt-24"
+          >
+            {children}
+          </h4>
+        );
+      },
       normal: ({ children }: any) => (
-        <p className="text-gray-300 leading-relaxed mb-4">{children}</p>
+        <p className="text-gray-300 text-lg leading-relaxed mb-6">
+          {children}
+        </p>
       ),
       blockquote: ({ children }: any) => (
-        <blockquote className="border-l-4 border-[#0FEDBE] pl-6 py-2 my-6 italic text-gray-300 bg-[#0a0a0a] rounded-r-lg">
+        <blockquote className="border-l-4 border-green-500 pl-6 py-4 my-8 italic text-gray-300 bg-[#0a0a0a] rounded-r-lg">
           {children}
         </blockquote>
       ),
@@ -193,7 +258,7 @@ export default function ArticleContent({ post }: ArticleContentProps) {
       ),
       em: ({ children }: any) => <em className="italic">{children}</em>,
       code: ({ children }: any) => (
-        <code className="px-2 py-1 bg-[#0a0a0a] border border-[#1a1a1a] rounded text-[#0FEDBE] text-sm font-mono">
+        <code className="px-2 py-1 bg-[#0a0a0a] border border-[#1a1a1a] rounded text-green-500 text-sm font-mono">
           {children}
         </code>
       ),
@@ -202,7 +267,7 @@ export default function ArticleContent({ post }: ArticleContentProps) {
           href={value?.href}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-[#0FEDBE] hover:underline font-medium"
+          className="text-green-500 hover:text-green-400 underline underline-offset-4 font-medium transition-colors"
         >
           {children}
         </a>
@@ -210,9 +275,22 @@ export default function ArticleContent({ post }: ArticleContentProps) {
     },
     list: {
       bullet: ({ children }: any) => (
-        <ul className="list-disc list-inside space-y-2 mb-4 text-gray-300">
+        <ul className="list-disc list-outside ml-6 space-y-3 mb-6 text-gray-300 text-lg">
           {children}
         </ul>
+      ),
+      number: ({ children }: any) => (
+        <ol className="list-decimal list-outside ml-6 space-y-3 mb-6 text-gray-300 text-lg">
+          {children}
+        </ol>
+      ),
+    },
+    listItem: {
+      bullet: ({ children }: any) => (
+        <li className="pl-2">{children}</li>
+      ),
+      number: ({ children }: any) => (
+        <li className="pl-2">{children}</li>
       ),
     },
   };
@@ -258,7 +336,7 @@ export default function ArticleContent({ post }: ArticleContentProps) {
         <div className="container mx-auto px-6 pt-24 pb-8">
           <Link
             href="/articles"
-            className="inline-flex items-center gap-2 text-gray-400 hover:text-[#0FEDBE] transition-colors group"
+            className="inline-flex items-center gap-2 text-gray-400 hover:text-green-500 transition-colors group"
           >
             <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
             Back to Articles
@@ -274,7 +352,7 @@ export default function ArticleContent({ post }: ArticleContentProps) {
                 {post.categories.map((category, index) => (
                   <span
                     key={index}
-                    className="px-3 py-1 bg-[#0a0a0a] border border-[#1a1a1a] rounded-full text-[#0FEDBE] text-sm"
+                    className="px-3 py-1 bg-[#0a0a0a] border border-green-500/30 rounded-full text-green-500 text-sm font-medium"
                   >
                     {category}
                   </span>
@@ -283,7 +361,7 @@ export default function ArticleContent({ post }: ArticleContentProps) {
             )}
 
             {/* Title */}
-            <h1 className="text-5xl md:text-6xl font-bold mb-6 bg-gradient-to-br from-white via-gray-200 to-gray-400 bg-clip-text text-transparent">
+            <h1 className="text-5xl md:text-6xl font-bold mb-6 bg-gradient-to-br from-white via-gray-200 to-gray-400 bg-clip-text text-transparent leading-tight">
               {post.title}
             </h1>
 
@@ -296,10 +374,10 @@ export default function ArticleContent({ post }: ArticleContentProps) {
                     alt={post.author?.name || "Author"}
                     width={48}
                     height={48}
-                    className="rounded-full border-2 border-[#0FEDBE]"
+                    className="rounded-full border-2 border-green-500"
                   />
                 ) : (
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#0FEDBE] to-[#0FEDBE]/50 flex items-center justify-center text-black font-bold text-lg">
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center text-black font-bold text-lg">
                     {post.author?.name?.[0] || "A"}
                   </div>
                 )}
@@ -319,7 +397,7 @@ export default function ArticleContent({ post }: ArticleContentProps) {
 
             {/* Featured Image */}
             {mainImageUrl && (
-              <div className="rounded-2xl overflow-hidden border border-[#1a1a1a] mb-12">
+              <div className="rounded-2xl overflow-hidden border border-[#1a1a1a] mb-12 shadow-2xl">
                 <Image
                   src={mainImageUrl}
                   alt={post.mainImage?.alt || post.title || "Article image"}
@@ -348,35 +426,35 @@ export default function ArticleContent({ post }: ArticleContentProps) {
               </div>
 
               {/* Share Section */}
-              <div className="mt-12 pt-8 border-t border-[#1a1a1a]">
+              <div className="mt-16 pt-8 border-t border-[#1a1a1a]">
                 <h3 className="text-xl font-bold mb-4 text-white">
                   Share this article
                 </h3>
-                <div className="flex gap-3">
+                <div className="flex flex-wrap gap-3">
                   <button
                     onClick={shareOnTwitter}
-                    className="flex items-center gap-2 px-4 py-2 bg-[#0a0a0a] border border-[#1a1a1a] rounded-lg hover:border-[#0FEDBE] hover:text-[#0FEDBE] transition-all"
+                    className="flex items-center gap-2 px-4 py-2 bg-[#0a0a0a] border border-[#1a1a1a] rounded-lg hover:border-green-500 hover:text-green-500 transition-all"
                   >
                     <Share2 className="w-4 h-4" />
                     Twitter
                   </button>
                   <button
                     onClick={shareOnLinkedIn}
-                    className="flex items-center gap-2 px-4 py-2 bg-[#0a0a0a] border border-[#1a1a1a] rounded-lg hover:border-[#0FEDBE] hover:text-[#0FEDBE] transition-all"
+                    className="flex items-center gap-2 px-4 py-2 bg-[#0a0a0a] border border-[#1a1a1a] rounded-lg hover:border-green-500 hover:text-green-500 transition-all"
                   >
                     <Linkedin className="w-4 h-4" />
                     LinkedIn
                   </button>
                   <button
                     onClick={shareOnFacebook}
-                    className="flex items-center gap-2 px-4 py-2 bg-[#0a0a0a] border border-[#1a1a1a] rounded-lg hover:border-[#0FEDBE] hover:text-[#0FEDBE] transition-all"
+                    className="flex items-center gap-2 px-4 py-2 bg-[#0a0a0a] border border-[#1a1a1a] rounded-lg hover:border-green-500 hover:text-green-500 transition-all"
                   >
                     <Facebook className="w-4 h-4" />
                     Facebook
                   </button>
                   <button
                     onClick={copyLink}
-                    className="flex items-center gap-2 px-4 py-2 bg-[#0a0a0a] border border-[#1a1a1a] rounded-lg hover:border-[#0FEDBE] hover:text-[#0FEDBE] transition-all"
+                    className="flex items-center gap-2 px-4 py-2 bg-[#0a0a0a] border border-[#1a1a1a] rounded-lg hover:border-green-500 hover:text-green-500 transition-all"
                   >
                     {linkCopied ? (
                       <>
@@ -403,10 +481,10 @@ export default function ArticleContent({ post }: ArticleContentProps) {
                         alt={post.author.name || "Author"}
                         width={80}
                         height={80}
-                        className="rounded-full border-2 border-[#0FEDBE]"
+                        className="rounded-full border-2 border-green-500"
                       />
                     ) : (
-                      <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[#0FEDBE] to-[#0FEDBE]/50 flex items-center justify-center text-black font-bold text-2xl">
+                      <div className="w-20 h-20 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center text-black font-bold text-2xl flex-shrink-0">
                         {post.author.name?.[0] || "A"}
                       </div>
                     )}
@@ -415,12 +493,12 @@ export default function ArticleContent({ post }: ArticleContentProps) {
                         {post.author.name}
                       </h3>
                       {post.author.title && (
-                        <p className="text-[#0FEDBE] mb-3">
+                        <p className="text-green-500 mb-3 font-medium">
                           {post.author.title}
                         </p>
                       )}
                       {post.author.bio && (
-                        <div className="text-gray-300 mb-4">
+                        <div className="text-gray-300 mb-4 text-base">
                           <PortableText value={post.author.bio} />
                         </div>
                       )}
@@ -430,7 +508,7 @@ export default function ArticleContent({ post }: ArticleContentProps) {
                             href={post.author.linkedin}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-gray-400 hover:text-[#0FEDBE] transition-colors"
+                            className="text-gray-400 hover:text-green-500 transition-colors"
                           >
                             <Linkedin className="w-5 h-5" />
                           </a>
@@ -440,7 +518,7 @@ export default function ArticleContent({ post }: ArticleContentProps) {
                             href={post.author.github}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-gray-400 hover:text-[#0FEDBE] transition-colors"
+                            className="text-gray-400 hover:text-green-500 transition-colors"
                           >
                             <svg
                               className="w-5 h-5"
@@ -462,21 +540,37 @@ export default function ArticleContent({ post }: ArticleContentProps) {
             {headings.length > 0 && (
               <aside className="hidden lg:block w-64 flex-shrink-0">
                 <div className="sticky top-24">
-                  <div className="p-6 bg-[#0a0a0a] border border-[#1a1a1a] rounded-2xl">
-                    <h3 className="text-sm font-bold uppercase tracking-wider mb-4 text-[#0FEDBE]">
+                  <div className="p-6 bg-[#0a0a0a] border border-[#1a1a1a] rounded-2xl shadow-lg">
+                    <h3 className="text-sm font-bold uppercase tracking-wider mb-4 text-green-500">
                       Table of Contents
                     </h3>
-                    <nav className="space-y-2">
+                    <nav className="space-y-1">
                       {headings.map((heading) => (
                         <a
                           key={heading.id}
                           href={`#${heading.id}`}
-                          className={`block text-sm transition-colors ${
-                            heading.level === "h3" ? "pl-4" : ""
+                          onClick={(e) => {
+                            e.preventDefault();
+                            const element = document.getElementById(heading.id);
+                            if (element) {
+                              const offset = 100;
+                              const elementPosition = element.getBoundingClientRect().top;
+                              const offsetPosition = elementPosition + window.pageYOffset - offset;
+                              window.scrollTo({
+                                top: offsetPosition,
+                                behavior: "smooth"
+                              });
+                            }
+                          }}
+                          className={`block text-sm transition-colors py-1.5 px-2 rounded ${
+                            heading.level === "h1" ? "" :
+                            heading.level === "h2" ? "pl-3" :
+                            heading.level === "h3" ? "pl-6" :
+                            "pl-9"
                           } ${
                             activeHeading === heading.id
-                              ? "text-[#0FEDBE] font-medium"
-                              : "text-gray-400 hover:text-gray-200"
+                              ? "text-green-500 font-semibold bg-green-500/10"
+                              : "text-gray-400 hover:text-gray-200 hover:bg-[#141414]"
                           }`}
                         >
                           {heading.text}

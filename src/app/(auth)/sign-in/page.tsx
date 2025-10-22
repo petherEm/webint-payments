@@ -37,7 +37,6 @@ export default function SignInPage() {
         description: e instanceof Error ? e.message : "Failed to sign in.",
       });
     }
-    console.log("[v0] Sign in data:", data);
   };
 
   return (
